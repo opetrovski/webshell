@@ -21,6 +21,12 @@
 <script type="text/javascript" src="js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="js/debug.js"></script>
 
+<script type="text/javascript" src="js/shell/FontMetrics.js"></script>
+<script type="text/javascript" src="js/shell/Document.js"></script>
+<script type="text/javascript" src="js/shell/Selection.js"></script>
+<script type="text/javascript" src="js/shell/CanvasTextEditor.js"></script>
+
+
 <script type="text/javascript">
 
 	function resizePageLayout () {
@@ -114,6 +120,7 @@
 	//
 	
 	var editorList = {};
+	var shellList = {};
 	var selectedEntry;
 	var selectedTable;
 	var tailEventSource = new Object();
@@ -152,9 +159,27 @@
 		// init inner-tabs inside outer-tab #3
 		$("#innerScriptTabs").tabs({
 			    activate: function( event, ui ) { 
-					$("div#tabShell > div#innerScriptTabs > div#toolbar > button#close_script").css('display','inline');
-					$("div#tabShell > div#innerScriptTabs > div#toolbar > button#save_script").css('display','inline');
-					$("div#tabShell > div#innerScriptTabs > div#toolbar > button#exec_script").css('display','inline');
+	   				var activeIdx = $("#innerScriptTabs").tabs('option', 'active');
+					var tabid = $($("#innerScriptTabs > div .ui-tabs-panel" )[activeIdx]).attr('id');
+					var action = $("#innerScriptTabContainer > div#" +tabid).data('action');
+					console.log('activeIdx: ' + activeIdx + ' tabid: ' + tabid + ' action: ' + action);
+			    	
+					if( action == 'shell' ){
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#close_script").css('display','none');
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#save_script").css('display','none');
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#exec_script").css('display','none');						
+
+						var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
+						var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
+						console.log(width + '  ' + height);
+						shellList[tabid].resize(width, height);
+						shellList[tabid].focus();
+					}
+					else {
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#close_script").css('display','inline');
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#save_script").css('display','inline');
+						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#exec_script").css('display','inline');
+					}
 			    }
 		});
 		$("#innerDatabaseTabs").tabs({
@@ -168,17 +193,19 @@
 		    	// change buttons according to type of tab (open,tail)
    				var activeIdx = $("#innerFilesystemTabs").tabs('option', 'active');
 				var tabid = $($("#innerFilesystemTabs > div .ui-tabs-panel" )[activeIdx]).attr('id');
-				var action = $("#innerTabContainer > div#" +tabid).data('action');
+				var action = $("#innerFilesystemTabContainer > div#" +tabid).data('action');
+				console.log('activeIdx: ' + activeIdx + ' tabid: ' + tabid + ' action: ' + action);
+				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#close").css('display','none');
+				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#save").css('display','none');
+				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#clear_log").css('display','none');
+				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#pause_log").css('display','none');
+
 				if( 'open' == action ){
-					console.log("action: " + action);
 					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#close").css('display','inline');
 					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#save").css('display','inline');
-					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#clear_log").css('display','none');
-					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#pause_log").css('display','none');
 				}
 				else if( 'tail' == action ){
 					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#close").css('display','inline');
-					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#save").css('display','none');
 					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#clear_log").css('display','inline');
 					$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#pause_log").css('display','inline');
 				}
@@ -204,7 +231,7 @@
 			$("#" + tabid).remove();
 			$('#innerFilesystemTabs').tabs("refresh");
 			
-			if ( $('#innerTabContainer > div').size() == 0 ){
+			if ( $('#innerFilesystemTabContainer > div').size() == 0 ){
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#close").css('display','none');
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#save").css('display','none');
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#clear_log").css('display','none');
@@ -220,7 +247,7 @@
 			$("#" + tabid).remove();
 			$('#innerDatabaseTabs').tabs("refresh");
 			
-			if ( $('#innerTabContainer > div').size() == 0 ){
+			if ( $('#innerDatabaseTabContainer > div').size() == 0 ){
 				$("div#tabDatabase > div#innerDatabaseTabs > div#toolbar > button#close_database_table").css('display','none');
 				$("div#tabDatabase > div#innerDatabaseTabs > div#toolbar > button#save_database_table").css('display','none');
 				resizePageLayout();
@@ -540,11 +567,11 @@
 				delete tailEventSource[tabid];
 			}
 			
-			$('#innerTabContainer > div[aria-hidden="false"]').remove();
+			$('#innerFilesystemTabContainer > div[aria-hidden="false"]').remove();
 			$('#innerFilesystemTabList > li[aria-selected="true"]').remove();
 			$( "#innerFilesystemTabs" ).tabs( "option", "active", 0 );
 
-			if ( $('#innerTabContainer > div').size() == 0 ){
+			if ( $('#innerFilesystemTabContainer > div').size() == 0 ){
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#close").css('display','none');
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#save").css('display','none');
 				$("div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#clear_log").css('display','none');
@@ -593,6 +620,7 @@
 			$('div#tabFilesystem > div#innerFilesystemTabs > div#toolbar > button#pause_log').text(button_label);
 		});
 
+
 		$("button#close_script").click(function(){
 			var activeIdx = $("#innerScriptTabs").tabs('option', 'active');
 			var tabid = $($("#innerScriptTabs > div .ui-tabs-panel" )[activeIdx]).attr('id');
@@ -629,10 +657,6 @@
 			var script = editor.getValue();
 			console.log("button#exec_script.click() " + script);
 			shell_websocket.send(script);
-		});
-		
-		$("button#clear_output").click(function(){
-			$('textarea#output').text('');
 		});
 		
 		$("button#new_script").click(function(){
@@ -934,6 +958,7 @@
 			 $( "#upload_progress" ).text('Upload Progress: ' + progress + '%');
 		});
     		
+		createShellTab();
 	 }); // end of $(document).ready()
 
 	
@@ -1074,12 +1099,19 @@
 		shell_websocket.onclose = function(evt){
 		};
 		shell_websocket.onerror = function(evt){ 
-			document.getElementById('shell').value = evt.data;
+			var activeIdx = $("#innerScriptTabs").tabs('option', 'active');
+			var tabid = $($("#innerScriptTabs > div .ui-tabs-panel" )[activeIdx]).attr('id');
+			if( shellList[tabid] ){
+				shellList[tabid].insertTextAtCurrentPosition(evt.data);
+			}
 		};
 		shell_websocket.onmessage = function(evt){ 
-			$("textarea#output").append(evt.data);
-		}
-		
+			var activeIdx = $("#innerScriptTabs").tabs('option', 'active');
+			var tabid = $($("#innerScriptTabs > div .ui-tabs-panel" )[activeIdx]).attr('id');
+			if( shellList[tabid] ){
+				shellList[tabid].insertTextAtCurrentPosition(evt.data);
+			}
+		};
 	} // createWebSockets
 
 
@@ -1115,7 +1147,34 @@
 		return tabid;
 	}
 
-	
+	function createShellTab(){
+		var tabid = createUID();
+		var title = 'Shell';
+		var li = $('<li class="ui-state-default ui-corner-top" role="tab" tabindex="1" aria-controls="'+tabid+'" aria-labelledby="ui-id-'+tabid+'" aria-selected="false"><a href="#'+tabid+'" class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-'+tabid+'">'+ title +'</a></li>');
+		$('#innerScriptTabList').append(li);
+		var div = $('<div id="'+tabid+'" class="container ui-tabs-panel ui-widget-content ui-corner-bottom" style="height: 100%;" aria-labelledby="ui-id-'+tabid+'" role="tabpanel" aria-expanded="false" aria-hidden="true">');
+		div.data('action', 'shell');
+		
+		var doc = new Document('');
+	    var shell = new CanvasTextEditor(doc);
+		var divShell = $('<div id="shell'+tabid+'" style="width: 100%; height: 100%;">');
+		divShell.append(shell.getEl());
+		div.append(divShell);
+		$("#innerScriptTabContainer").append(div);
+	    
+	    shellList[tabid] = shell;
+		$('#innerScriptTabs').tabs("refresh");
+		var index = $('#innerScriptTabList > div').length - 1;
+		$('#innerScriptTabs').tabs( "option", "active", index );
+		resizePageLayout();
+		var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
+		var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
+		shell.resize(width, height);
+		shell._checkScroll();
+		shell.focus();
+		return tabid;
+	}
+
 	function sendFilesystemCommand(cmd, cwd, filename)
 	{
 		if( cmd == 'tail' ){
@@ -1243,6 +1302,7 @@
 								</tbody>
 							</table>
 						</div>
+											
 						<div id="progressbar" class="ui-widget-footer ui-corner-bottom" style="display:none">
 							<span id="upload_progress">&nbsp;</span>
 							<button id="cancel_upload" style="display:none">Cancel</button>
@@ -1402,22 +1462,6 @@
 						</div>
 					</div>
 				</div>
-
-				<div
-					class="ui-layout-east ui-layout-pane ui-layout-pane-east ui-layout-container">
-					<div class="ui-layout-center ui-layout-pane ui-layout-pane-center">
-						<div class="ui-widget-header ui-corner-top">Output</div>
-						<div class="ui-widget-content"
-							style="position: relative; height: 329px; visibility: visible;">
-							<textarea id="output" style="width: 95%; height: 97%;"></textarea>
-						</div>
-						<div class="ui-widget-footer ui-corner-bottom">
-							<button id="clear_output">Clear</button>
-						</div>
-					</div>
-				</div>
-				<!-- east panel -->
-
 			</div>
 			<!-- tabShell -->
 		</div>
