@@ -204,7 +204,7 @@ CanvasTextEditor.prototype.render = function() {
       lineCount = this._document.getLineCount(),
       selectionRanges = this._selection.lineRanges(),
       selectionWidth = 0;
-
+  
   // Making sure we don't render something that we won't see
   if (lineCount < maxHeight) {
     maxHeight = lineCount;
@@ -242,6 +242,8 @@ CanvasTextEditor.prototype.render = function() {
       this.context.fillStyle = this.options.textColor;
     }
 
+    var lineSlice = this._document.getLine(i).slice(this._scrollLeft);
+    
     // Drawing text
     this.context.fillText(
       this._document.getLine(i).slice(this._scrollLeft), 0, topOffset + baselineOffset

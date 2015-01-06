@@ -105,11 +105,10 @@ Selection.prototype.isEmpty = function() {
 
 /**
  * Moves both start and end to a specified position inside document.
- * @param {number} line
  * @param {number} character
+ * @param {number} line
  */
 Selection.prototype.setPosition = function(character, line, keepSelection) {
-
   var position = this._forceBounds(character, line);
 
   // Calling private setter that does the heavy lifting
@@ -129,29 +128,17 @@ Selection.prototype._forceBounds = function(character, line) {
   var position = this.getPosition();
 
   // Checking lower bounds
-  line >= 0 || (line = 0);
   if (character < 0) {
-    // Wraparound for lines
-    if (line === position[1] && line > 0) {
-      --line;
-      character = this.editor.getDocument().getLine(line).trim('\n').length;
-    } else {
+	  // just the current line is editable
+	  // all prior lines are shell history and are therefore readonly
       character = 0;
-    }
   }
 
   // Checking upper bounds
   var lineCount = this.editor.getDocument().getLineCount();
-  line < lineCount || (line = lineCount - 1);
-  var characterCount = this.editor.getDocument().getLine(line).trim('\n').length;
+  var characterCount = this.editor.getDocument().getLine(line).length;
   if (character > characterCount) {
-    // Wraparound for lines
-    if (line === position[1] && line < this.editor.getDocument().getLineCount() - 1) {
-      ++line;
-      character = 0;
-    } else {
       character = characterCount;
-    }
   }
   return [character, line];
 };

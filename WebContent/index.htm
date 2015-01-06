@@ -171,7 +171,9 @@
 
 						var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
 						var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
-						console.log(width + '  ' + height);
+						// calculate a height of multiple line height
+						var mod = height % shellList[tabid]._metrics.getHeight();
+						height = height - mod;
 						shellList[tabid].resize(width, height);
 						shellList[tabid].focus();
 					}
@@ -1169,8 +1171,11 @@
 		resizePageLayout();
 		var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
 		var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
+		// the hight will be a multiple of the line hight
+		var mod = height % shell._metrics.getHeight();
+		height = height - mod;
 		shell.resize(width, height);
-		shell._checkScroll();
+		//shell._checkScroll();
 		shell.focus();
 		return tabid;
 	}

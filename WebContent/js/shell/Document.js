@@ -86,6 +86,7 @@ Document.prototype.insertText = function(text, column, row) {
   // First we calculate new column position because
   // text array will be changed in the process
   var newColumn = text[text.length - 1].length;
+
   if (text.length === 1) {
     newColumn += column;
   }
@@ -104,7 +105,6 @@ Document.prototype.insertText = function(text, column, row) {
   // Finally we calculate new position
   column = newColumn;
   row += text.length - 1;
-
   return [column, row];
 };
 
