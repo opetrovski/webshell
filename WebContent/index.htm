@@ -73,7 +73,7 @@
 	,	resizeWhileDragging:	true
 	,   north__size:			"30%"
 	,   south__size:			"30%"
-	,	minSize:				250    // height of south pane in side bar
+	,	minSize:				360    // height of south pane in side bar
 	,	center__minHeight:		100
 	,	spacing_open:			10
 	,	spacing_closed:			10
@@ -92,7 +92,7 @@
 	,	south__resizable:		false
 	,	north__closable:		false
 	,	south__closable:		false
-	,	west__minSize:			300     // initial width of west pane
+	,	west__minSize:			380     // initial width of west pane
 	,	east__minSize:			300
 	,	center__minWidth:		400
 	,	spacing_open:			10
@@ -820,7 +820,6 @@
 				selectedEntry = $(this);
 				var filename = $(this).children().first().text();
 				var cwd = escape($("#cwd").text());
-				sendFilesystemCommand("info", cwd, filename);			 				
 			}, function() {
 				$(this).removeClass('hover');
 			}
@@ -1019,7 +1018,6 @@
 							selectedEntry = $(this);
 							var filename = $(this).children().first().text();
 							var cwd = escape($("#cwd").text());
-							sendFilesystemCommand("info", cwd, filename);			 				
 						}, function() {
 							$(this).removeClass('hover');
 						}
@@ -1051,29 +1049,6 @@
 			else if( obj.command == 'save'){
 				// $("#filesystemStatusbar").text("Status: " + obj.status);
 			}
-			else if( obj.command == 'info'){
-				var obj = jQuery.parseJSON(obj.response);				
-				var tabid = createUID();
-				var table = $('<table id="'+tabid+'" cellpadding="1" cellspacing="1" ></table>');
-				var row = $('<tr><td>Name</td><td>'+ obj.name +'</td></tr>');
-				table.append(row);
-// 				var row = $('<tr><td>Path</td><td>'+ obj.cwd +'</td></tr>');
-// 				table.append(row);
-				var row = $('<tr><td>Size</td><td>'+ obj.size +'</td></tr>');
-				table.append(row);
-				var row = $('<tr><td>Last modified</td><td>'+ obj.modified +'</td></tr>');
-				table.append(row);
-				var row = $('<tr><td>Execute</td><td>'+ obj.exec +'</td></tr>');
-				table.append(row);
-				var row = $('<tr><td>Read</td><td>'+ obj.read +'</td></tr>');
-				table.append(row);
-				var row = $('<tr><td>Write</td><td>'+ obj.write +'</td></tr>');
-				table.append(row);
-				var row = $('<tr><td>Hidden</td><td>'+ obj.hidden +'</td></tr>');
-				table.append(row);
-				$("#fileinfo").children().remove();
-				$("#fileinfo").append(table);
-			}			
 			else if( obj.command == 'delete'){
 				var cwd = escape($("#cwd").text());
 				sendFilesystemCommand("chdir", cwd, ".");
@@ -1285,7 +1260,7 @@
 						role="tablist">
 					</ul>
 					<div id="innerFilesystemTabContainer" class="ui-widget-content"
-						style="border-top-width: 0px; position: relative; height: 473px; visibility: visible;">
+						style="border-top-width: 0px; position: relative; height: 400px; visibility: visible;">
 					</div>
 					<div id="toolbar"
 						class="ui-widget-footer ui-corner-bottom">
@@ -1301,8 +1276,7 @@
 					<div class="ui-layout-center ui-layout-pane ui-layout-pane-center">
 						<div id="cwd" class="ui-widget-header ui-corner-top"></div>
 						<div id="file-drop-zone" class="ui-widget-content scrollingtable">
-							<table cellpadding="0" cellspacing="0" border="0"
-								class="context-menu-filesystem" id="filesystem_table">
+							<table class="context-menu-filesystem" id="filesystem_table">
 								<tbody>
 								</tbody>
 							</table>
@@ -1314,9 +1288,27 @@
 						</div>
 					</div>
 					<div class="ui-layout-south ui-layout-pane ui-layout-pane-south">
-						<div class="ui-widget-header ui-corner-top">File Info</div>
-						<div class="ui-widget-content" id="fileinfo"
-							style="position: relative; height: 102px; visibility: visible;">
+						<div class="ui-widget-header ui-corner-top">Log File Filter</div>
+						<div class="ui-widget-content scrollingtable" id="logfile-filter">
+							<table>
+								<tr><td>Activate filter</td><td><input type="checkbox"></td></tr>
+								<tr><td>Action</td><td>
+									<input type="radio" name="filter-action" value="highlight-matching" checked>Highlight matching lines<br>
+	    							<input type="radio" name="filter-action" value="remove-non-matching">Remove non matching lines<br>
+								</td></tr>
+								<tr><td>Log level</td><td><select name="loglevel" size="7" multiple>
+									      <option>INFO</option>
+									      <option>WARNING</option>
+									      <option>DEBUG</option>
+									      <option>ERROR</option>
+									      <option>FINE</option>
+									      <option>FINER</option>
+									      <option>FINEST</option>
+									    </select>
+								</td></tr>
+								<tr><td>Time range</td><td><input type="text"></td></tr>
+								<tr><td>Search text</td><td><input type="text"></td></tr>
+							</table>
 						</div>
 					</div>
 					
