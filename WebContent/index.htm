@@ -101,7 +101,7 @@
 	,	togglerContent_open:	'<div class="ui-icon"></div>'
 	,	togglerContent_closed:	'<div class="ui-icon"></div>'
 	,	triggerEventsOnLoad:	true // so center__onresize is triggered when layout inits
-	,	center__onresize:		$.layout.callbacks.resizePaneAccordions // resize ALL Accordions nested inside
+	,	center__onresize:		resizeShell
 	,	west__onresize:			$.layout.callbacks.resizePaneAccordions // ditto for west-pane
 	/*
 	,	center__onresize: function (pane, $Pane) {
@@ -125,6 +125,22 @@
 	var selectedTable;
 	var tailEventSource = new Object();
     
+	function resizeShell(pane_name, element, state, options, layout_name){
+		for (tabid in shellList) {
+			var action = $("#innerScriptTabContainer > div#" +tabid).data('action');
+			if( action == 'shell' ){
+				var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
+				var height = $("#innerScriptTabContainer > div#" +tabid).height() - 30;
+				// calculate a height of multiple line height
+				var mod = height % shellList[tabid]._metrics.getHeight();
+				height = height - mod;
+				shellList[tabid].resize(width, height);
+				shellList[tabid].focus();
+			}
+		}
+	}
+	
+	
 	$(document).ready( function() {
 
 		// create the page-layout, which will ALSO create the tabs-wrapper child-layout
@@ -168,13 +184,6 @@
 						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#close_script").css('display','none');
 						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#save_script").css('display','none');
 						$("div#tabShell > div#innerScriptTabs > div#toolbar > button#exec_script").css('display','none');						
-
-						var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
-						var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
-						// calculate a height of multiple line height
-						var mod = height % shellList[tabid]._metrics.getHeight();
-						height = height - mod;
-						shellList[tabid].resize(width, height);
 						shellList[tabid].focus();
 					}
 					else {
@@ -1145,12 +1154,11 @@
 		$('#innerScriptTabs').tabs( "option", "active", index );
 		resizePageLayout();
 		var width = $("#innerScriptTabContainer > div#" +tabid).width() - 20;
-		var height = $("#innerScriptTabContainer > div#" +tabid).height() - 40;
+		var height = $("#innerScriptTabContainer > div#" +tabid).height() - 30;
 		// the hight will be a multiple of the line hight
 		var mod = height % shell._metrics.getHeight();
 		height = height - mod;
 		shell.resize(width, height);
-		//shell._checkScroll();
 		shell.focus();
 		return tabid;
 	}
