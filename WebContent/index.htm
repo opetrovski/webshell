@@ -856,6 +856,12 @@
 				callback: function(action, options) {
 					if( action == 'execute' ){
 						shell_websocket.send(selectedEntry.text());
+						for (tabid in shellList) {
+							var action = $("#innerScriptTabContainer > div#" +tabid).data('action');
+							if( action == 'shell' ){
+								shellList[tabid].addCommand(selectedEntry.text());
+							}
+						}
 					}
 					else if ( action == 'delete' ){
 						var tableCol = selectedEntry.find('td');

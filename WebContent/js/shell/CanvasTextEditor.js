@@ -24,6 +24,8 @@ var CanvasTextEditor = function(doc, options) {
     }
   }
 
+  this._commandHistory = [];
+  this._commandHistoryPointer = 0;
   this._metrics = new FontMetrics(this.options.fontFamily, this.options.fontSize);
   this._createWrapper();
   this._selection = new Selection(this, this.options.textColor);
@@ -306,6 +308,31 @@ CanvasTextEditor.prototype.setInputText = function(text, force) {
   this.needsClearing = false;
 };
 
+
+/**
+ * Replace the text at the current line with the given command
+ * @param  {string} command
+ */
+CanvasTextEditor.prototype.replaceTextAtCurrentLine = function(command) {
+  // If selection is not empty we need to "replace" selected text with inserted
+  // one which means deleting old selected text before inserting new one
+  var pos = this._selection.getPosition();
+  while (pos[0] > 0) {
+	  this.deleteCharAtCurrentPosition(false);
+	  pos = this._selection.getPosition();
+  }
+
+  pos = this._selection.getPosition();
+
+  // Inserting new text and changing position of cursor to a new one
+  this._selection.setPosition.apply(
+    this._selection,
+    this._document.insertText(command, pos[0], pos[1])
+  );
+  this.render();
+};
+		
+		
 /**
  * Inserts text at the current cursor position
  * @param  {string} text
@@ -412,6 +439,7 @@ CanvasTextEditor.prototype.keydown = function(e) {
       break;
     case 13: // Enter
       var currentLine = this._document.getLastLine();
+      this.addCommand(currentLine);
       this.insertTextAtCurrentPosition('\n');
       shell_websocket.send(currentLine);
       break;
@@ -419,15 +447,23 @@ CanvasTextEditor.prototype.keydown = function(e) {
       this._selection.moveLeft(1, this.shiftPressed);
       break;
     case 38: // Up arrow
-    	// TODO go back in command history
-      // this._selection.moveUp(1, this.shiftPressed);
+    	// go back in command history
+    	var command = this._commandHistory[this._commandHistoryPointer];
+    	this.replaceTextAtCurrentLine(command);
+    	if(this._commandHistoryPointer > 0){
+    		this._commandHistoryPointer = this._commandHistoryPointer - 1;
+    	}
       break;
     case 39: // Right arrow
       this._selection.moveRight(1, this.shiftPressed);
       break;
     case 40: // Down arrow
-    	// TODO go forward in command history
-      // this._selection.moveDown(1, this.shiftPressed);
+    	// go forward in command history
+        	var command = this._commandHistory[this._commandHistoryPointer];
+        	this.replaceTextAtCurrentLine(command);    		
+        	if(this._commandHistoryPointer < (this._commandHistory.length - 1)){
+        		this._commandHistoryPointer = this._commandHistoryPointer + 1;
+        	}
       break;
     default:
       handled = false;
@@ -435,6 +471,16 @@ CanvasTextEditor.prototype.keydown = function(e) {
   if(handled) {
     e.preventDefault();
   }
+};
+
+
+/**
+ * Add a command to the command history for later retrieval
+ * with the up/down keys
+ */
+CanvasTextEditor.prototype.addCommand = function(command) {
+	  this._commandHistoryPointer = this._commandHistory.length;
+	  this._commandHistory.push(command);
 };
 
 /**
